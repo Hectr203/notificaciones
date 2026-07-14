@@ -1,0 +1,63 @@
+services:
+  centrifugo:
+    image: centrifugo/centrifugo:v6
+    restart: unless-stopped
+    cpus: "0.70"
+    mem_limit: 384m
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      CENTRIFUGO_HTTP_SERVER_ADDRESS: 0.0.0.0
+      CENTRIFUGO_HTTP_SERVER_PORT: 8000
+      CENTRIFUGO_HEALTH_ENABLED: "true"
+      CENTRIFUGO_HEALTH_HANDLER_PREFIX: /health
+      CENTRIFUGO_CLIENT_DISALLOW_ANONYMOUS_CONNECTION_TOKENS: "true"
+      CENTRIFUGO_CHANNEL_WITHOUT_NAMESPACE_ALLOW_SUBSCRIBE_FOR_CLIENT: "true"
+      CENTRIFUGO_HTTP_API_EXTERNAL: "true"
+      CENTRIFUGO_ADMIN_ENABLED: "false"
+      CENTRIFUGO_USAGE_STATS_DISABLED: "true"
+      CENTRIFUGO_LOG_LEVEL: info
+    command: centrifugo
+    expose:
+      - "8000"
+    networks:
+      - realtime
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 128m
+    depends_on:
+      - centrifugo
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - realtime
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  realtime:
+    name: realtime_net
+
+volumes:
+  caddy_data:
+  caddy_config:
