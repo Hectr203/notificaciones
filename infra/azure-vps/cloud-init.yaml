@@ -1,0 +1,123 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - ufw
+  - unattended-upgrades
+
+write_files:
+  - path: /opt/realtime/docker-compose.yml
+    permissions: '0644'
+    content: |
+      services:
+        centrifugo:
+          image: centrifugo/centrifugo:v6
+          restart: unless-stopped
+          cpus: "0.45"
+          mem_limit: 256m
+          env_file:
+            - .env
+          environment:
+            CENTRIFUGO_HTTP_SERVER_ADDRESS: 0.0.0.0
+            CENTRIFUGO_HTTP_SERVER_PORT: 8000
+            CENTRIFUGO_HEALTH_ENABLED: "true"
+            CENTRIFUGO_HEALTH_HANDLER_PREFIX: /health
+            CENTRIFUGO_CLIENT_DISALLOW_ANONYMOUS_CONNECTION_TOKENS: "true"
+            CENTRIFUGO_CHANNEL_WITHOUT_NAMESPACE_ALLOW_SUBSCRIBE_FOR_CLIENT: "true"
+            CENTRIFUGO_HTTP_API_EXTERNAL: "true"
+            CENTRIFUGO_ADMIN_ENABLED: "false"
+            CENTRIFUGO_USAGE_STATS_DISABLED: "true"
+            CENTRIFUGO_LOG_LEVEL: info
+          command: centrifugo
+          expose:
+            - "8000"
+          networks:
+            - realtime
+          logging:
+            driver: json-file
+            options:
+              max-size: "10m"
+              max-file: "3"
+
+        caddy:
+          image: caddy:2-alpine
+          restart: unless-stopped
+          cpus: "0.20"
+          mem_limit: 96m
+          depends_on:
+            - centrifugo
+          env_file:
+            - .env
+          ports:
+            - "80:80"
+            - "443:443"
+          volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile:ro
+            - caddy_data:/data
+            - caddy_config:/config
+          networks:
+            - realtime
+          logging:
+            driver: json-file
+            options:
+              max-size: "10m"
+              max-file: "3"
+
+      networks:
+        realtime:
+          name: realtime_net
+
+      volumes:
+        caddy_data:
+        caddy_config:
+
+  - path: /opt/realtime/Caddyfile
+    permissions: '0644'
+    content: |
+      __REALTIME_DOMAIN__ {
+        encode zstd gzip
+
+        route {
+          @centrifugo_api {
+            path /api*
+            header Authorization "apikey {$CENTRIFUGO_HTTP_API_KEY}"
+          }
+          reverse_proxy @centrifugo_api centrifugo:8000
+
+          @private_paths path /api* /debug* /metrics* /swagger*
+          respond @private_paths 403
+
+          reverse_proxy centrifugo:8000
+        }
+      }
+
+  - path: /opt/realtime/.env
+    permissions: '0600'
+    content: |
+      REALTIME_DOMAIN=__REALTIME_DOMAIN__
+      CENTRIFUGO_CLIENT_ALLOWED_ORIGINS=__ALLOWED_ORIGINS__
+      CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY=__TOKEN_SECRET__
+      CENTRIFUGO_HTTP_API_KEY=__HTTP_API_KEY__
+
+runcmd:
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - . /etc/os-release && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu ${VERSION_CODENAME} stable" > /etc/apt/sources.list.d/docker.list
+  - apt-get update
+  - apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - systemctl enable --now docker
+  - systemctl enable unattended-upgrades
+  - test -f /swapfile || fallocate -l 1G /swapfile
+  - chmod 600 /swapfile
+  - mkswap /swapfile || true
+  - swapon /swapfile || true
+  - grep -q '^/swapfile ' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  - cd /opt/realtime && docker compose up -d

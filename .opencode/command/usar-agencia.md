@@ -1,10 +1,10 @@
 ---
 description: Usar la Agencia Universal para Proyectos Existentes como orquestador principal.
 ---
-
 Actua usando esta agencia de proyectos existentes como herramienta principal.
 
 Contrato operativo obligatorio:
+
 - Lee y aplica `asistente-principal.md` como instruccion principal de orquestacion.
 - Trabaja desde la carpeta actual de la agencia cuando ejecutes scripts o referencias internas.
 - Usa sus agentes, skills, flujos, guias, plantillas, contexto y scripts cuando correspondan.

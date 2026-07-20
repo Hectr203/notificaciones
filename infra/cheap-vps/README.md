@@ -96,11 +96,20 @@ CENTRIFUGO_TOKEN_SECRET=EL_MISMO_VALOR_DE_CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KE
 CENTRIFUGO_HTTP_API_KEY=EL_MISMO_VALOR_DE_CENTRIFUGO_HTTP_API_KEY
 ```
 
-Si tu backend esta en otro servidor, no abras `/api` publicamente salvo que entiendas el riesgo. Mejor usa VPN, red privada del proveedor o despliega backend y Centrifugo en el mismo VPS.
+Backend externo al VPS:
+
+```env
+CENTRIFUGO_HTTP_URL=https://TU_DOMINIO/api
+CENTRIFUGO_TOKEN_SECRET=EL_MISMO_VALOR_DE_CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY
+CENTRIFUGO_HTTP_API_KEY=EL_MISMO_VALOR_DE_CENTRIFUGO_HTTP_API_KEY
+```
+
+Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`. Sin ese header responde `403`.
 
 ## Seguridad incluida
 
-- `/api`, `/metrics`, `/debug` y `/swagger` quedan bloqueados desde Internet en Caddy.
+- `/api` queda expuesto solo con `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`.
+- `/metrics`, `/debug` y `/swagger` quedan bloqueados desde Internet en Caddy.
 - El admin UI de Centrifugo queda desactivado.
 - Solo se aceptan clientes con JWT firmado por tu backend.
 - `allowed_origins` limita desde que dominios se puede abrir el WebSocket.

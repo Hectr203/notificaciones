@@ -1,0 +1,27 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "sshPublicKey": {
+      "value": "${AZURE_SSH_PUBLIC_KEY}"
+    },
+    "vmSize": {
+      "value": "${AZURE_VM_SIZE}"
+    },
+    "centrifugoTokenSecret": {
+      "value": "${CENTRIFUGO_TOKEN_SECRET}"
+    },
+    "centrifugoHttpApiKey": {
+      "value": "${CENTRIFUGO_HTTP_API_KEY}"
+    },
+    "allowedOrigins": {
+      "value": "${CENTRIFUGO_ALLOWED_ORIGINS}"
+    }
+  }
+}

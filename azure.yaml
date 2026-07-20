@@ -1,0 +1,4 @@
+name: notis-realtime-vps
+infra:
+  provider: bicep
+  path: infra/azure-vps

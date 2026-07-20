@@ -1,8 +1,16 @@
 {$REALTIME_DOMAIN} {
   encode zstd gzip
 
-  @private_paths path /api* /debug* /metrics* /swagger*
-  respond @private_paths 403
+  route {
+    @centrifugo_api {
+      path /api*
+      header Authorization "apikey {$CENTRIFUGO_HTTP_API_KEY}"
+    }
+    reverse_proxy @centrifugo_api centrifugo:8000
 
-  reverse_proxy centrifugo:8000
+    @private_paths path /api* /debug* /metrics* /swagger*
+    respond @private_paths 403
+
+    reverse_proxy centrifugo:8000
+  }
 }
