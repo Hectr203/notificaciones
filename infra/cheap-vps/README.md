@@ -104,7 +104,7 @@ CENTRIFUGO_TOKEN_SECRET=EL_MISMO_VALOR_DE_CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KE
 CENTRIFUGO_HTTP_API_KEY=EL_MISMO_VALOR_DE_CENTRIFUGO_HTTP_API_KEY
 ```
 
-Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`. Sin ese header responde `403`.
+Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`. Sin ese header responde `403`. El backend debe publicar usando ese header, no `X-API-Key`, cuando consuma Centrifugo por el dominio publico.
 
 ## Seguridad incluida
 
@@ -113,6 +113,7 @@ Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFU
 - El admin UI de Centrifugo queda desactivado.
 - Solo se aceptan clientes con JWT firmado por tu backend.
 - `allowed_origins` limita desde que dominios se puede abrir el WebSocket.
+- El namespace `notifications` queda habilitado para canales `notifications:<userId>`.
 
 ## Cuando escalar
 

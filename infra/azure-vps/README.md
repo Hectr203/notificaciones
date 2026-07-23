@@ -106,7 +106,9 @@ CENTRIFUGO_TOKEN_SECRET=el_mismo_valor_de_CENTRIFUGO_TOKEN_SECRET
 CENTRIFUGO_HTTP_API_KEY=el_mismo_valor_de_CENTRIFUGO_HTTP_API_KEY
 ```
 
-Para backend externo, Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`. Sin ese header responde `403`.
+Para backend externo, Caddy solo deja pasar `/api` si el request trae `Authorization: apikey <CENTRIFUGO_HTTP_API_KEY>`. Sin ese header responde `403`. El backend debe publicar usando ese header, no `X-API-Key`, cuando consuma Centrifugo por el dominio publico.
+
+La VM habilita el namespace `notifications` para canales `notifications:<userId>`, que es el formato usado por la aplicacion.
 
 ## Apagar o borrar para no cobrar
 
